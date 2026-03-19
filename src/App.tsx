@@ -37,7 +37,7 @@ export default function App() {
 
   useEffect(() => {
     fetch(
-      `https://api.inaturalist.org/v1/observations?user_login=${INATURALIST_USER}&has[]=photos&has[]=geo&per_page=200&order=created_at&order_by=desc`
+      `https://api.inaturalist.org/v1/observations?user_login=${INATURALIST_USER}&has[]=photos&has[]=geo&per_page=200&order=created_at&order_by=desc&locale=es-CL`
     )
       .then((res) => res.json())
       .then((data) => setObservations(data.results))
@@ -54,7 +54,7 @@ export default function App() {
         <div className="overlay error">{error}</div>
       )}
       <MapContainer
-        center={[-34.6, -64.0]}
+        center={[-35.6, -71.5]}
         zoom={5}
         style={{ width: '100%', height: '100%' }}
       >
