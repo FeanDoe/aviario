@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Map as LeafletMap } from 'leaflet'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -8,7 +9,6 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 
-// Fix default marker icons broken by Vite's asset handling
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -29,33 +29,107 @@ interface Observation {
 }
 
 const INATURALIST_USER = 'feandoe'
+const CHILE_PLACE_ID = 7182
+
+const REGIONS: { label: string; placeId: number }[] = [
+  { label: 'Arica y Parinacota', placeId: 96834 },
+  { label: 'Tarapacá', placeId: 12692 },
+  { label: 'Antofagasta', placeId: 13339 },
+  { label: 'Atacama', placeId: 12680 },
+  { label: 'Coquimbo', placeId: 12682 },
+  { label: 'Valparaíso', placeId: 13343 },
+  { label: 'Metropolitana de Santiago', placeId: 12691 },
+  { label: "O'Higgins", placeId: 12683 },
+  { label: 'Maule', placeId: 12690 },
+  { label: 'Ñuble', placeId: 212134 },
+  { label: 'Biobío', placeId: 82677 },
+  { label: 'La Araucanía', placeId: 12679 },
+  { label: 'Los Ríos', placeId: 96835 },
+  { label: 'Los Lagos', placeId: 13341 },
+  { label: 'Aysén', placeId: 125708 },
+  { label: 'Magallanes', placeId: 13342 },
+]
+
+function buildUrl(regionPlaceId: number | null): string {
+  const base = `https://api.inaturalist.org/v1/observations?user_login=${INATURALIST_USER}&has[]=photos&has[]=geo&per_page=200&order=created_at&order_by=desc&locale=es-CL`
+  return regionPlaceId ? `${base}&place_id=${regionPlaceId}` : base
+}
 
 export default function App() {
   const [observations, setObservations] = useState<Observation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedRegion, setSelectedRegion] = useState<number | null>(CHILE_PLACE_ID)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const mapRef = useRef<LeafletMap | null>(null)
 
   useEffect(() => {
-    fetch(
-      `https://api.inaturalist.org/v1/observations?user_login=${INATURALIST_USER}&has[]=photos&has[]=geo&per_page=200&order=created_at&order_by=desc&locale=es-CL`
-    )
+    const timer = setTimeout(() => mapRef.current?.invalidateSize(), 300)
+    return () => clearTimeout(timer)
+  }, [sidebarOpen])
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    fetch(buildUrl(selectedRegion))
       .then((res) => res.json())
       .then((data) => setObservations(data.results))
       .catch(() => setError('No se pudieron cargar las observaciones.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [selectedRegion])
 
   return (
     <div className="app">
-      {loading && (
-        <div className="overlay">Cargando observaciones...</div>
-      )}
-      {error && (
-        <div className="overlay error">{error}</div>
-      )}
+      <aside className={`sidebar${sidebarOpen ? '' : ' sidebar--collapsed'}`}>
+        <button className="toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)} title={sidebarOpen ? 'Ocultar panel' : 'Mostrar panel'}>
+          {sidebarOpen ? '‹' : '›'}
+        </button>
+        {sidebarOpen && <>
+          <h2>Aviario</h2>
+          <p className="count">
+            {loading ? 'Cargando...' : `${observations.length} observaciones`}
+          </p>
+          <hr />
+          <h3>Lugar</h3>
+          <ul className="region-list">
+            <li>
+              <button
+                className={selectedRegion === null ? 'active' : ''}
+                onClick={() => setSelectedRegion(null)}
+              >
+                Todo el mundo
+              </button>
+            </li>
+            <li>
+              <button
+                className={selectedRegion === CHILE_PLACE_ID ? 'active' : ''}
+                onClick={() => setSelectedRegion(CHILE_PLACE_ID)}
+              >
+                Chile
+              </button>
+            </li>
+            <hr />
+            {REGIONS.map((r) => (
+              <li key={r.placeId}>
+                <button
+                  className={selectedRegion === r.placeId ? 'active' : ''}
+                  onClick={() => setSelectedRegion(r.placeId)}
+                >
+                  {r.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>}
+      </aside>
+
+      {error && <div className="overlay error">{error}</div>}
+
+      <div className={`map-wrapper${sidebarOpen ? '' : ' map-wrapper--full'}`}>
       <MapContainer
         center={[-35.6, -71.5]}
         zoom={5}
+        ref={mapRef}
         style={{ width: '100%', height: '100%' }}
       >
         <TileLayer
@@ -84,6 +158,7 @@ export default function App() {
           )
         })}
       </MapContainer>
+      </div>
     </div>
   )
 }
