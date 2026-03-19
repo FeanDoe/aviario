@@ -163,4 +163,7 @@
   width: 200px;
   margin-top: 8px;
   border-radius: 4px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
