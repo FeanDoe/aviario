@@ -60,7 +60,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedRegion, setSelectedRegion] = useState<number | null>(CHILE_PLACE_ID)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768)
   const [modalUrl, setModalUrl] = useState<string | null>(null)
   const mapRef = useRef<LeafletMap | null>(null)
 
