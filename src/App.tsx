@@ -61,6 +61,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [selectedRegion, setSelectedRegion] = useState<number | null>(CHILE_PLACE_ID)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [modalUrl, setModalUrl] = useState<string | null>(null)
   const mapRef = useRef<LeafletMap | null>(null)
 
   useEffect(() => {
@@ -142,6 +143,8 @@ export default function App() {
           const commonName = obs.taxon?.preferred_common_name
           const sciName = obs.taxon?.name ?? 'Desconocido'
 
+          const largeUrl = obs.photos[0]?.url.replace('square', 'large')
+
           return (
             <Marker key={obs.id} position={[lat, lng]}>
               <Popup>
@@ -150,7 +153,12 @@ export default function App() {
                   {commonName && <em>{sciName}</em>}
                   <span>{obs.observed_on}{obs.place_guess ? ` · ${obs.place_guess}` : ''}</span>
                   {photoUrl && (
-                    <img src={photoUrl} alt={commonName ?? sciName} />
+                    <img
+                      src={photoUrl}
+                      alt={commonName ?? sciName}
+                      className="popup-img"
+                      onClick={() => setModalUrl(largeUrl ?? photoUrl)}
+                    />
                   )}
                 </div>
               </Popup>
@@ -159,6 +167,12 @@ export default function App() {
         })}
       </MapContainer>
       </div>
+
+      {modalUrl && (
+        <div className="modal-backdrop" onClick={() => setModalUrl(null)}>
+          <img src={modalUrl} className="modal-img" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   )
 }
