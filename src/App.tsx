@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Map as LeafletMap } from 'leaflet'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './App.css'
@@ -137,6 +140,7 @@ export default function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
+        <MarkerClusterGroup chunkedLoading>
         {observations.map((obs) => {
           const [lat, lng] = obs.location.split(',').map(Number)
           const photoUrl = obs.photos[0]?.url.replace('square', 'medium')
@@ -165,6 +169,7 @@ export default function App() {
             </Marker>
           )
         })}
+        </MarkerClusterGroup>
       </MapContainer>
       </div>
 
