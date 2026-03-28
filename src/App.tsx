@@ -54,7 +54,7 @@ const REGIONS: { label: string; placeId: number }[] = [
 ]
 
 function buildUrl(regionPlaceId: number | null): string {
-  const base = `https://api.inaturalist.org/v1/observations?user_login=${INATURALIST_USER}&has[]=photos&has[]=geo&per_page=200&order=created_at&order_by=desc&locale=es-CL`
+  const base = `https://api.inaturalist.org/v1/observations?user_login=${INATURALIST_USER}&has[]=photos&has[]=geo&per_page=200&order=created_at&order_by=desc&locale=es&preferred_place_id=7182`
   return regionPlaceId ? `${base}&place_id=${regionPlaceId}` : base
 }
 
